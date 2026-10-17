@@ -1,0 +1,60 @@
+<!--
+  POLÍTICA PARA AZURE API MANAGEMENT (el "API Manager") — Parkings Together · EP4
+
+  Qué hace:
+   1) Habilita CORS para que el frontend (navegador) pueda llamar a la API.
+   2) VALIDA EL JWT que emite Keycloak: si falta o es invalido, responde 401
+      (rechaza); si es valido, deja pasar (acepta). Este es el punto 4 del examen.
+   3) Reenvía la petición al backend (Spring Boot) en la VM.
+
+  CÓMO USARLA:
+   - En el portal de Azure: API Management > tu API > Design > "Inbound processing"
+     > abre el editor de políticas (</>) y pega este contenido.
+   - Reemplaza TU_HOST_PUBLICO por la IP pública (o DNS) de tu VM de Azure.
+     (Debe ser el MISMO host con que el frontend obtiene el token en Keycloak.)
+-->
+<policies>
+  <inbound>
+    <base />
+    <cors allow-credentials="false">
+      <allowed-origins>
+        <origin>*</origin>
+      </allowed-origins>
+      <allowed-methods>
+        <method>GET</method>
+        <method>POST</method>
+        <method>PUT</method>
+        <method>DELETE</method>
+        <method>OPTIONS</method>
+      </allowed-methods>
+      <allowed-headers>
+        <header>*</header>
+      </allowed-headers>
+    </cors>
+
+    <!-- Valida el JWT contra la configuración OpenID de Keycloak -->
+    <validate-jwt header-name="Authorization"
+                  failed-validation-httpcode="401"
+                  failed-validation-error-message="No autorizado: falta un JWT válido.">
+      <openid-config url="http://TU_HOST_PUBLICO:8080/realms/parkings/.well-known/openid-configuration" />
+      <required-claims>
+        <!-- El token debe haber sido emitido para nuestro cliente del frontend -->
+        <claim name="azp" match="any">
+          <value>parkings-frontend</value>
+        </claim>
+      </required-claims>
+    </validate-jwt>
+
+    <!-- Si el token es válido, reenvía al backend Spring Boot (en la VM) -->
+    <set-backend-service base-url="http://TU_HOST_PUBLICO:8083" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

@@ -1,0 +1,60 @@
+{
+  "realm": "parkings",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "displayName": "Parkings Together (IDaaS)",
+  "clients": [
+    {
+      "clientId": "parkings-frontend",
+      "name": "Parkings Together - Frontend",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Usuario",
+      "lastName": "Demo",
+      "email": "demo@parkings.cl",
+      "credentials": [
+        { "type": "password", "value": "demo123", "temporary": false }
+      ]
+    },
+    {
+      "username": "jefferson",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Jefferson",
+      "lastName": "Rojas",
+      "email": "jefferson@parkings.cl",
+      "credentials": [
+        { "type": "password", "value": "jefferson123", "temporary": false }
+      ]
+    },
+    {
+      "username": "gabriel",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Gabriel",
+      "lastName": "Molina",
+      "email": "gabriel@parkings.cl",
+      "credentials": [
+        { "type": "password", "value": "gabriel123", "temporary": false }
+      ]
+    }
+  ]
+}

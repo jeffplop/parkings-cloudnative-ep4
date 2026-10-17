@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Parkings Together — Panel (OIDC + API Manager)</title>
+  <style>
+    :root { --navy:#1f3864; --blue:#2e5496; --bg:#f4f7fb; --line:#dde3ec; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; color:#222; background:var(--bg); }
+    header { background:var(--navy); color:#fff; padding:16px 22px; }
+    header h1 { margin:0; font-size:20px; }
+    header p { margin:4px 0 0; opacity:.85; font-size:13px; }
+    main { max-width: 860px; margin: 22px auto; padding: 0 16px; }
+    .card { background:#fff; border:1px solid var(--line); border-radius:10px; padding:18px; margin-bottom:16px; }
+    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    button { background:var(--blue); color:#fff; border:0; border-radius:7px; padding:9px 14px; font-size:14px; cursor:pointer; }
+    button.secondary { background:#eef2f8; color:var(--navy); }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .badge { display:inline-block; padding:3px 9px; border-radius:20px; font-size:12px; font-weight:bold; }
+    .ok { background:#e5f3e8; color:#2e7d32; } .off { background:#fdeaea; color:#b3261e; }
+    pre { background:#0f172a; color:#e2e8f0; padding:12px; border-radius:8px; overflow:auto; font-size:12.5px; max-height:280px; }
+    h2 { color:var(--navy); font-size:16px; margin:0 0 10px; }
+    .muted { color:#667; font-size:13px; }
+    code { background:#eef2f8; padding:1px 5px; border-radius:4px; }
+  </style>
+  <script src="config.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Parkings Together — Panel de demostración</h1>
+    <p>Login con IDaaS (Keycloak · OAuth 2.0 / OpenID Connect) y consumo del backend a través del API Manager.</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Sesión</h2>
+      <div class="row">
+        <span>Estado: <span id="authBadge" class="badge off">sin sesión</span></span>
+        <span id="userInfo" class="muted"></span>
+      </div>
+      <div class="row" style="margin-top:12px;">
+        <button id="loginBtn">Iniciar sesión con IDaaS</button>
+        <button id="logoutBtn" class="secondary" disabled>Cerrar sesión</button>
+        <button id="tokenBtn" class="secondary" disabled>Ver mi JWT</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Llamar al backend (vía API Manager)</h2>
+      <p class="muted">Cada llamada envía tu JWT en la cabecera <code>Authorization: Bearer …</code>. Si el token falta o es inválido, el API Manager responde <b>401</b>.</p>
+      <div class="row">
+        <button class="call" data-path="/api/demo/cotizar" data-body='{"reservaId":"R-1","zona":"CENTRO","horas":3}' disabled>Cotizar (RPC síncrono)</button>
+        <button class="call" data-path="/api/demo/tickets" data-body='{"reservaId":"R-1","cliente":"Jefferson","monto":3500}' disabled>Generar ticket (asíncrono)</button>
+        <button class="call" data-path="/api/demo/broadcast" data-body='{"reservaId":"R-1","cliente":"Jefferson","patente":"ABCD12","instante":"2026-10-19T10:00:00"}' disabled>Difundir (pub/sub)</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Respuesta</h2>
+      <pre id="out">(aún no hay llamadas)</pre>
+    </div>
+  </main>
+
+  <script>
+    // Carga el adaptador keycloak-js desde el propio servidor Keycloak.
+    (function () {
+      var s = document.createElement('script');
+      s.src = window.APP_CONFIG.keycloakUrl + '/js/keycloak.js';
+      s.onload = function () { var a = document.createElement('script'); a.src = 'app.js'; document.body.appendChild(a); };
+      s.onerror = function () { document.getElementById('out').textContent = 'No se pudo cargar keycloak.js desde ' + window.APP_CONFIG.keycloakUrl + '\n¿Está arriba Keycloak y es correcto keycloakUrl en config.js?'; };
+      document.body.appendChild(s);
+    })();
+  </script>
+</body>
+</html>

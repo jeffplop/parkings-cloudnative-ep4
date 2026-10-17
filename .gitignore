@@ -1,0 +1,23 @@
+# Build / runtime
+target/
+*.class
+*.jar
+*.war
+
+# Entorno / secretos
+.env
+.env.local
+
+# Instrucciones internas del equipo (NO van en el repo del profesor)
+TUTORIAL.md
+
+# Node / varios
+node_modules/
+
+# SO
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
