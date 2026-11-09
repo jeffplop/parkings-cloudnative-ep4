@@ -11,6 +11,9 @@
   const logoutBtn = document.getElementById('logoutBtn');
   const tokenBtn = document.getElementById('tokenBtn');
   const callBtns = Array.from(document.querySelectorAll('.call'));
+  const metricsBtn = document.getElementById('metricsBtn');
+  const metricsPre = document.getElementById('metrics');
+  let metricsTimer = null;
 
   const keycloak = new Keycloak({ url: cfg.keycloakUrl, realm: cfg.realm, clientId: cfg.clientId });
 
@@ -21,6 +24,8 @@
     logoutBtn.disabled = !logged;
     tokenBtn.disabled = !logged;
     callBtns.forEach(b => b.disabled = !logged);
+    metricsBtn.disabled = !logged;
+    if (!logged && metricsTimer) { clearInterval(metricsTimer); metricsTimer = null; metricsBtn.textContent = 'Métricas en vivo ▶'; }
     if (logged) {
       const p = keycloak.tokenParsed || {};
       userInfo.textContent = '· ' + (p.preferred_username || p.email || 'usuario');
@@ -59,4 +64,24 @@
       }
     };
   });
+
+  // Métricas Kafka en tiempo real (polling cada 2 s mientras está activo).
+  async function fetchMetrics() {
+    try {
+      await keycloak.updateToken(30).catch(() => {});
+      const res = await fetch(cfg.apimUrl + '/api/kafka/metrics', {
+        headers: { 'Authorization': 'Bearer ' + keycloak.token }
+      });
+      metricsPre.textContent = 'HTTP ' + res.status + '\n\n' + JSON.stringify(await res.json(), null, 2);
+    } catch (e) {
+      metricsPre.textContent = 'Error al leer métricas: ' + e;
+    }
+  }
+  metricsBtn.onclick = () => {
+    if (metricsTimer) {
+      clearInterval(metricsTimer); metricsTimer = null; metricsBtn.textContent = 'Métricas en vivo ▶';
+    } else {
+      fetchMetrics(); metricsTimer = setInterval(fetchMetrics, 2000); metricsBtn.textContent = 'Detener ⏸';
+    }
+  };
 })();

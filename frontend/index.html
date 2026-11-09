@@ -57,6 +57,17 @@
     </div>
 
     <div class="card">
+      <h2>Streaming con Apache Kafka (eventos + métricas en tiempo real)</h2>
+      <p class="muted">Publica eventos a los tópicos y observa cómo las <b>métricas se actualizan solas</b>. El backend además emite un flujo continuo de eventos (visible en Kafka UI).</p>
+      <div class="row">
+        <button class="call" data-path="/api/demo/kafka/ocupacion" data-body='{"estacionamientoId":"EST-100","zona":"CENTRO","plazasTotales":120,"plazasOcupadas":84,"instante":"2026-11-09T10:00:00Z"}' disabled>Publicar ocupación</button>
+        <button class="call" data-path="/api/demo/kafka/pagos" data-body='{"pagoId":"PAY-1","reservaId":"R-1","monto":3500,"medio":"WEBPAY","instante":"2026-11-09T10:00:00Z"}' disabled>Publicar pago</button>
+        <button id="metricsBtn" class="secondary" disabled>Métricas en vivo ▶</button>
+      </div>
+      <pre id="metrics" style="margin-top:12px;">(pulsa “Métricas en vivo” para ver el streaming)</pre>
+    </div>
+
+    <div class="card">
       <h2>Respuesta</h2>
       <pre id="out">(aún no hay llamadas)</pre>
     </div>

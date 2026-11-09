@@ -19,6 +19,28 @@ spring:
         acknowledge-mode: manual
         prefetch: 10
 
+  # --- Conexión a Apache Kafka (clúster de brokers en Docker) ---
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all                       # espera confirmación de las réplicas (durabilidad)
+      properties:
+        enable.idempotence: true      # evita duplicados en reintentos del productor
+    consumer:
+      group-id: ${KAFKA_GROUP_ID:parkings-messaging}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # ErrorHandlingDeserializer envuelve al JsonDeserializer: un payload corrupto
+      # NO rompe el consumidor (va al manejador de errores / DLT). Rúbrica: manejo de errores.
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        spring.json.trusted.packages: "cl.duoc.parkings.messaging.kafka.event"
+    admin:
+      fail-fast: false                # el microservicio arranca aunque los brokers tarden en subir
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Topología de mensajería CENTRALIZADA (rúbrica indicador 1).
 # Ningún nombre de cola, exchange, binding o routing-key se escribe suelto en el
@@ -62,6 +84,28 @@ parkings:
         dlq: parkings.documents.dlq
         routing-key: document.generate
         dlq-routing-key: dlq.document
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Streaming con Apache Kafka (EP5): nombres de tópicos, particiones, réplicas,
+  # retención y consumer groups centralizados (se leen desde KafkaProperties).
+  #   - 2 tópicos: ocupación (telemetría de plazas) y pagos (transacciones).
+  #   - 3 particiones y 3 réplicas por tópico (requiere 3 brokers).
+  # ───────────────────────────────────────────────────────────────────────────
+  kafka:
+    partitions: ${KAFKA_PARTITIONS:3}
+    replicas: ${KAFKA_REPLICAS:3}
+    retention-ms: 604800000          # 7 días de retención de eventos
+    cleanup-policy: delete           # política de limpieza por tiempo/tamaño
+    topics:
+      ocupacion: parkings.ocupacion  # telemetría de ocupación de estacionamientos
+      pagos: parkings.pagos          # eventos de pago / transacciones
+    groups:
+      ocupacion: parkings-ocupacion-group
+      pagos: parkings-pagos-group
+    # Generador de flujo CONTINUO para la demostración (streaming en vivo).
+    stream-generator:
+      enabled: ${KAFKA_STREAM_ENABLED:false}
+      interval-ms: ${KAFKA_STREAM_INTERVAL_MS:3000}
 
 logging:
   level:
