@@ -11,7 +11,7 @@ Together*, una arquitectura cloud-native con:
 - **Frontend** SPA que inicia sesión, consume el backend y visualiza las métricas.
 - Todo orquestado con **docker-compose**.
 
-**Integrantes:** Jefferson Rojas · Gabriel Molina — **Sección:** 002V
+**Integrantes:** Jefferson Rojas · Gabriel Molina · Guillermo Santander — **Sección:** 002V
 
 ---
 

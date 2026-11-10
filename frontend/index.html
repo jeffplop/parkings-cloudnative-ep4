@@ -23,6 +23,19 @@
     h2 { color:var(--navy); font-size:16px; margin:0 0 10px; }
     .muted { color:#667; font-size:13px; }
     code { background:#eef2f8; padding:1px 5px; border-radius:4px; }
+    .kmetric { margin-top:12px; min-height:60px; }
+    .kstat { display:inline-block; margin:0 18px 8px 0; font-size:13px; color:#1C2430; }
+    .kstat b { color:#0E7C86; font-size:17px; }
+    .kbar-row { display:flex; align-items:center; gap:8px; margin:5px 0; }
+    .kbar-label { width:130px; font-size:12px; color:#333; }
+    .kbar-track { flex:1; background:#D7DEEA; border-radius:4px; height:16px; }
+    .kbar-fill { background:#0E7C86; height:16px; border-radius:4px; transition:width .5s ease; }
+    .kbar-pct { width:46px; text-align:right; font-size:12px; font-weight:bold; color:#0E7C86; }
+    table.kevents { width:100%; border-collapse:collapse; margin-top:12px; font-size:12px; }
+    table.kevents th, table.kevents td { text-align:left; padding:4px 6px; border-bottom:1px solid #e6e6e6; }
+    table.kevents th { color:#1f3864; }
+    .ktag { display:inline-block; padding:1px 8px; border-radius:10px; font-size:10px; font-weight:bold; color:#fff; }
+    .ktag.ocu { background:#0E7C86; } .ktag.pay { background:#F2A900; }
   </style>
   <script src="config.js"></script>
 </head>
@@ -64,7 +77,7 @@
         <button class="call" data-path="/api/demo/kafka/pagos" data-body='{"pagoId":"PAY-1","reservaId":"R-1","monto":3500,"medio":"WEBPAY","instante":"2026-11-09T10:00:00Z"}' disabled>Publicar pago</button>
         <button id="metricsBtn" class="secondary" disabled>Métricas en vivo ▶</button>
       </div>
-      <pre id="metrics" style="margin-top:12px;">(pulsa “Métricas en vivo” para ver el streaming)</pre>
+      <div id="metrics" class="kmetric"><span class="muted">(pulsa “Métricas en vivo” para ver el streaming en tiempo real)</span></div>
     </div>
 
     <div class="card">

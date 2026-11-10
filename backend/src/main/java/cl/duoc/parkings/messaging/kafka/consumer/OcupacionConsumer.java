@@ -2,6 +2,7 @@ package cl.duoc.parkings.messaging.kafka.consumer;
 
 import cl.duoc.parkings.messaging.kafka.event.OcupacionEvent;
 import cl.duoc.parkings.messaging.kafka.metrics.StreamMetricsService;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -10,8 +11,9 @@ import org.springframework.stereotype.Component;
 /**
  * Consumidor Kafka del tópico de OCUPACIÓN (rúbrica EP5). Usa {@code @KafkaListener}
  * y pertenece a un consumer group propio; con concurrency=3 hay un hilo por
- * partición (balanceo dentro del grupo). La lógica de dominio (validar + actualizar
- * métricas) está separada de la infraestructura de mensajería.
+ * partición (balanceo dentro del grupo). Lee el {@code ConsumerRecord} para
+ * conocer la partición y el offset de cada evento. La lógica de dominio (validar
+ * + actualizar métricas) está separada de la infraestructura de mensajería.
  *
  * Si la validación falla, lanza una excepción: el manejador de errores reintenta
  * y, si persiste, envía el evento a la DLT (ver KafkaConsumerConfig).
@@ -31,11 +33,16 @@ public class OcupacionConsumer {
             topics = "${parkings.kafka.topics.ocupacion}",
             groupId = "${parkings.kafka.groups.ocupacion}",
             concurrency = "3")
-    public void onOcupacion(OcupacionEvent event) {
+    public void onOcupacion(ConsumerRecord<String, OcupacionEvent> record) {
+        OcupacionEvent event = record.value();
         validar(event);
         metrics.registrarOcupacion(event);
-        log.info("[kafka:ocupacion] estacionamiento={} zona={} ocupadas={}/{}",
-                event.estacionamientoId(), event.zona(), event.plazasOcupadas(), event.plazasTotales());
+        metrics.registrarEvento("ocupacion",
+                event.estacionamientoId() + " · " + event.zona() + " · " + event.plazasOcupadas() + "/" + event.plazasTotales(),
+                record.partition(), record.offset());
+        log.info("[kafka:ocupacion] p{} off{} estacionamiento={} zona={} ocupadas={}/{}",
+                record.partition(), record.offset(), event.estacionamientoId(), event.zona(),
+                event.plazasOcupadas(), event.plazasTotales());
     }
 
     /** Validación del payload: un evento inconsistente se rechaza (irá a reintento/DLT). */

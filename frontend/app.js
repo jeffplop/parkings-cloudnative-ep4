@@ -66,15 +66,39 @@
   });
 
   // Métricas Kafka en tiempo real (polling cada 2 s mientras está activo).
+  function esc(s) { return String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
   async function fetchMetrics() {
     try {
       await keycloak.updateToken(30).catch(() => {});
       const res = await fetch(cfg.apimUrl + '/api/kafka/metrics', {
         headers: { 'Authorization': 'Bearer ' + keycloak.token }
       });
-      metricsPre.textContent = 'HTTP ' + res.status + '\n\n' + JSON.stringify(await res.json(), null, 2);
+      if (!res.ok) { metricsPre.innerHTML = '<span class="muted">HTTP ' + res.status + ' — ¿sesión válida?</span>'; return; }
+      const m = await res.json();
+      let h = '<div>';
+      h += '<span class="kstat">Ocupación global <b>' + (m.ocupacionGlobalPorcentaje || 0) + '%</b></span>';
+      h += '<span class="kstat">Ingresos <b>$' + (m.ingresosAcumulados || 0) + '</b></span>';
+      h += '<span class="kstat">Eventos <b>' + ((m.eventosOcupacionProcesados || 0) + (m.eventosPagoProcesados || 0)) + '</b></span></div>';
+      const zonas = m.ocupacionPorZona || {};
+      Object.keys(zonas).forEach(z => {
+        const pct = zonas[z].porcentaje || 0;
+        h += '<div class="kbar-row"><div class="kbar-label">' + esc(z) + '</div>'
+          + '<div class="kbar-track"><div class="kbar-fill" style="width:' + pct + '%"></div></div>'
+          + '<div class="kbar-pct">' + pct + '%</div></div>';
+      });
+      const evs = m.ultimosEventos || [];
+      if (evs.length) {
+        h += '<table class="kevents"><thead><tr><th>Tipo</th><th>Part.</th><th>Offset</th><th>Detalle</th></tr></thead><tbody>';
+        evs.forEach(e => {
+          const cls = e.tipo === 'pago' ? 'pay' : 'ocu';
+          h += '<tr><td><span class="ktag ' + cls + '">' + esc(e.tipo) + '</span></td>'
+            + '<td>' + esc(e.particion) + '</td><td>' + esc(e.offset) + '</td><td>' + esc(e.detalle) + '</td></tr>';
+        });
+        h += '</tbody></table>';
+      }
+      metricsPre.innerHTML = h;
     } catch (e) {
-      metricsPre.textContent = 'Error al leer métricas: ' + e;
+      metricsPre.innerHTML = '<span class="muted">Error al leer métricas: ' + esc(e) + '</span>';
     }
   }
   metricsBtn.onclick = () => {
